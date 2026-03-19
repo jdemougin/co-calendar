@@ -306,7 +306,8 @@ export default function App() {
       }
     };
 
-    const interval = setInterval(checkNotif, 60000);
+    checkNotif(); // check immédiatement au démarrage
+    const interval = setInterval(checkNotif, 30000); // toutes les 30s pour pas rater la fenêtre
     return () => clearInterval(interval);
   }, [notifEnabled, notifTime, isAuthenticated, selectedCalendars]);
 
@@ -1333,7 +1334,7 @@ export default function App() {
                     animate={{ opacity: 1, height: 'auto' }}
                     className="space-y-2"
                   >
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Heure du rappel</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Heure du rappel — sauvegardé automatiquement ✓</label>
                     <div className="relative">
                       <input
                         type="time"
