@@ -277,12 +277,13 @@ export default function App() {
         if (lastNotif !== today) {
           if (Notification.permission === 'granted') {
             const showNotif = () => {
+              const iconUrl = `${window.location.origin}/icon-192.png`;
               if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.ready.then(registration => {
                   registration.showNotification('co-calendar', {
                     body: 'Valide ta journée pour Marina stp !',
-                    icon: '/favicon.svg',
-                    badge: '/favicon.svg',
+                    icon: iconUrl,
+                    badge: iconUrl,
                     vibrate: [200, 100, 200],
                     tag: 'daily-reminder'
                   } as any);
@@ -290,7 +291,7 @@ export default function App() {
               } else {
                 new Notification('co-calendar', {
                   body: 'Valide ta journée pour Marina stp !',
-                  icon: '/favicon.svg'
+                  icon: iconUrl
                 });
               }
             };
@@ -756,7 +757,7 @@ export default function App() {
   if (isAuthenticated === null) return null;
 
   return (
-    <div className="h-screen overflow-y-auto overflow-x-hidden bg-[#f8fafc] text-slate-900 font-sans p-4 md:p-8">
+    <div className="h-full overflow-y-auto overflow-x-hidden bg-[#f8fafc] text-slate-900 font-sans p-4 md:p-8">
       {/* Conflict Modal */}
       <AnimatePresence>
         {showConflictModal && (
