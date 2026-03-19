@@ -220,36 +220,77 @@ export default function App() {
     };
   }, []);
 
-  // Notification check
+  // Notification check + auto-log à minuit
   useEffect(() => {
-    if (!notifEnabled) return;
-    
+    const autoLogMidnight = async () => {
+      if (!isAuthenticated || selectedCalendars.length < 2) return;
+      const now = new Date();
+      const yesterday = new Date(now);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).format(yesterday);
+      const lastLog = localStorage.getItem('lastLogDate');
+      if (lastLog === yesterdayStr) return; // déjà loggé
+
+      // Cherche ce qui était dans le calendrier de référence hier
+      const refId = selectedCalendars[1];
+      let m: Activity = { category: '#divsem', type: 'Rien' };
+      let a: Activity = { category: '#divsem', type: 'Rien' };
+
+      try {
+        const res = await fetch(`/api/check-conflicts?calendarId=${refId}&date=${yesterdayStr}`, {
+          headers: getAuthHeader()
+        });
+        if (res.ok) {
+          const refData = await res.json();
+          const morningEvent = refData.find((e: any) => e.start?.includes('08:30'));
+          const afternoonEvent = refData.find((e: any) => e.start?.includes('13:00'));
+          if (morningEvent) m = parseEventToActivity(morningEvent);
+          if (afternoonEvent) a = parseEventToActivity(afternoonEvent);
+        }
+      } catch {}
+
+      try {
+        await fetch('/api/log-activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          body: JSON.stringify({ morning: m, afternoon: a, calendars: [selectedCalendars[0]], date: yesterdayStr }),
+        });
+        localStorage.setItem('lastLogDate', yesterdayStr);
+      } catch {}
+    };
+
     const checkNotif = () => {
       const now = new Date();
       const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      
+
+      // Auto-log à minuit si journée non remplie
+      if (currentTime === '00:00') {
+        autoLogMidnight();
+      }
+
+      if (!notifEnabled) return;
       if (currentTime === notifTime) {
-        // Only notify if not already done today
         const lastNotif = localStorage.getItem('lastNotifDate');
         const today = now.toISOString().split('T')[0];
-        
         if (lastNotif !== today) {
           if (Notification.permission === 'granted') {
             const showNotif = () => {
               if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.ready.then(registration => {
-                  registration.showNotification('TPS Planner', {
-                    body: 'N\'oubliez pas de valider votre journée !',
-                    icon: 'https://picsum.photos/seed/tps/192/192',
-                    badge: 'https://picsum.photos/seed/tps/96/96',
+                  registration.showNotification('co-calendar', {
+                    body: 'Valide ta journée pour Marina stp !',
+                    icon: '/favicon.svg',
+                    badge: '/favicon.svg',
                     vibrate: [200, 100, 200],
                     tag: 'daily-reminder'
                   } as any);
                 });
               } else {
-                new Notification('TPS Planner', {
-                  body: 'N\'oubliez pas de valider votre journée !',
-                  icon: 'https://picsum.photos/seed/tps/192/192'
+                new Notification('co-calendar', {
+                  body: 'Valide ta journée pour Marina stp !',
+                  icon: '/favicon.svg'
                 });
               }
             };
@@ -264,7 +305,7 @@ export default function App() {
 
     const interval = setInterval(checkNotif, 60000);
     return () => clearInterval(interval);
-  }, [notifEnabled, notifTime]);
+  }, [notifEnabled, notifTime, isAuthenticated, selectedCalendars]);
 
   useEffect(() => {
     localStorage.setItem('notifEnabled', String(notifEnabled));
@@ -665,6 +706,10 @@ export default function App() {
       const allSuccess = data.every((r: any) => r.success);
       if (allSuccess) {
         setStatus({ type: 'success', message: 'Activités enregistrées avec succès !' });
+        const todayStr = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+        localStorage.setItem('lastLogDate', todayStr);
         
         // Update state with prefixed values
         setMorning(m);

@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
-  const { morning, afternoon, calendars } = req.body;
+  const { morning, afternoon, calendars, date } = req.body;
 
   const client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -27,13 +27,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   client.setCredentials(tokens);
   const calendar = google.calendar({ version: 'v3', auth: client });
 
-  const today = new Date();
-  const dateStr = new Intl.DateTimeFormat('en-CA', {
+  const dateStr = date || new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Paris',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).format(today);
+  }).format(new Date());
 
   const startOfDay = `${dateStr}T00:00:00Z`;
   const endOfDay = `${dateStr}T23:59:59Z`;
