@@ -1,6 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CheckCircle2, LogIn, Settings, Clock, AlertCircle, ChevronRight, Copy, ArrowDown, ChevronDown, Check, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = window.atob(base64);
+  const output = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) output[i] = raw.charCodeAt(i);
+  return output;
+}
 
 const CATEGORY_GROUPS = [
   {
@@ -220,7 +229,7 @@ export default function App() {
     };
   }, []);
 
-  // Notification check + auto-log à minuit
+  // Auto-log à minuit si journée non remplie
   useEffect(() => {
     const autoLogMidnight = async () => {
       if (!isAuthenticated || selectedCalendars.length < 2) return;
@@ -231,9 +240,8 @@ export default function App() {
         timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
       }).format(yesterday);
       const lastLog = localStorage.getItem('lastLogDate');
-      if (lastLog === yesterdayStr) return; // déjà loggé
+      if (lastLog === yesterdayStr) return;
 
-      // Cherche ce qui était dans le calendrier de référence hier
       const refId = selectedCalendars[1];
       let m: Activity = { category: '#divsem', type: 'Rien' };
       let a: Activity = { category: '#divsem', type: 'Rien' };
@@ -261,55 +269,50 @@ export default function App() {
       } catch {}
     };
 
-    const checkNotif = () => {
-      const now = new Date();
-      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-      // Auto-log à minuit si journée non remplie
-      if (currentTime === '00:00') {
-        autoLogMidnight();
-      }
-
-      if (!notifEnabled) return;
-      if (currentTime === notifTime) {
-        const lastNotif = localStorage.getItem('lastNotifDate');
-        const today = new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
-        }).format(now);
-        if (lastNotif !== today) {
-          if (Notification.permission === 'granted') {
-            const showNotif = () => {
-              const iconUrl = `${window.location.origin}/icon-192.png`;
-              if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.ready.then(registration => {
-                  registration.showNotification('co-calendar', {
-                    body: 'Valide ta journée pour Marina stp !',
-                    icon: iconUrl,
-                    badge: iconUrl,
-                    vibrate: [200, 100, 200],
-                    tag: 'daily-reminder'
-                  } as any);
-                });
-              } else {
-                new Notification('co-calendar', {
-                  body: 'Valide ta journée pour Marina stp !',
-                  icon: iconUrl
-                });
-              }
-            };
-            showNotif();
-            localStorage.setItem('lastNotifDate', today);
-          } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission();
-          }
-        }
-      }
+    const checkMidnight = () => {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false
+      }).formatToParts(new Date());
+      const h = parts.find(p => p.type === 'hour')?.value ?? '01';
+      const m = parts.find(p => p.type === 'minute')?.value ?? '00';
+      if ((h === '00' || h === '24') && m === '00') autoLogMidnight();
     };
 
-    checkNotif(); // check immédiatement au démarrage
-    const interval = setInterval(checkNotif, 30000); // toutes les 30s pour pas rater la fenêtre
+    checkMidnight();
+    const interval = setInterval(checkMidnight, 60000);
     return () => clearInterval(interval);
-  }, [notifEnabled, notifTime, isAuthenticated, selectedCalendars]);
+  }, [isAuthenticated, selectedCalendars]);
+
+  // Abonnement push serveur — l'unique source de vérité pour les notifications
+  useEffect(() => {
+    if (!notifEnabled) return;
+    subscribeToPush(notifTime);
+  }, [notifEnabled, notifTime]);
+
+  const subscribeToPush = async (time: string) => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    if (!vapidKey) return;
+
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
+        });
+      }
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ subscription: sub.toJSON(), notifTime: time }),
+      });
+    } catch (e) {
+      console.error('Push subscription failed:', e);
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem('notifEnabled', String(notifEnabled));
@@ -1310,11 +1313,13 @@ export default function App() {
                     </div>
                   </div>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (!notifEnabled && Notification.permission !== 'granted') {
-                        Notification.requestPermission().then(perm => {
-                          if (perm === 'granted') setNotifEnabled(true);
-                        });
+                        const perm = await Notification.requestPermission();
+                        if (perm === 'granted') {
+                          setNotifEnabled(true);
+                          subscribeToPush(notifTime);
+                        }
                       } else {
                         setNotifEnabled(!notifEnabled);
                       }
