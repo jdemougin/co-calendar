@@ -523,24 +523,24 @@ export default function App() {
       headers: getAuthHeader()
     });
     const { url } = await res.json();
-    const width = 600, height = 700;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    window.open(url, 'google_auth', `width=${width},height=${height},left=${left},top=${top}`);
+    window.location.href = url;
   };
 
+  // Récupère les tokens depuis le hash après redirect OAuth
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-        if (event.data.tokens) {
-          localStorage.setItem('google_tokens', JSON.stringify(event.data.tokens));
-        }
+    const hash = window.location.hash;
+    if (hash.startsWith('#tokens=')) {
+      try {
+        const encoded = hash.slice('#tokens='.length);
+        const tokens = JSON.parse(atob(encoded));
+        localStorage.setItem('google_tokens', JSON.stringify(tokens));
+        window.history.replaceState(null, '', '/');
         setIsAuthenticated(true);
         fetchCalendars();
+      } catch (e) {
+        console.error('Failed to parse tokens from hash', e);
       }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    }
   }, []);
 
   const saveCalendars = (ids: string[]) => {

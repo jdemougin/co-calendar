@@ -16,24 +16,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { tokens } = await oauth2Client.getToken(code);
-    res.send(`
-      <html>
-      <body>
-        <script>
-          if (window.opener) {
-            window.opener.postMessage({
-              type: 'OAUTH_AUTH_SUCCESS',
-              tokens: ${JSON.stringify(tokens)}
-            }, '*');
-            window.close();
-          } else {
-            window.location.href = '/';
-          }
-        </script>
-        <p>Authentification réussie. Cette fenêtre va se fermer.</p>
-      </body>
-      </html>
-    `);
+    const encoded = Buffer.from(JSON.stringify(tokens)).toString('base64');
+    res.redirect(`${process.env.APP_URL}/#tokens=${encoded}`);
   } catch (error) {
     console.error('Error exchanging code for tokens:', error);
     res.status(500).send('Authentication failed');
