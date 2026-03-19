@@ -273,7 +273,9 @@ export default function App() {
       if (!notifEnabled) return;
       if (currentTime === notifTime) {
         const lastNotif = localStorage.getItem('lastNotifDate');
-        const today = now.toISOString().split('T')[0];
+        const today = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(now);
         if (lastNotif !== today) {
           if (Notification.permission === 'granted') {
             const showNotif = () => {
