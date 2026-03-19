@@ -1343,6 +1343,30 @@ export default function App() {
                       />
                       <Clock size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                     </div>
+                    <button
+                      onClick={() => {
+                        const iconUrl = `${window.location.origin}/icon-192.png`;
+                        if (Notification.permission === 'granted') {
+                          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.ready.then(reg => {
+                              reg.showNotification('co-calendar', {
+                                body: 'Valide ta journée pour Marina stp !',
+                                icon: iconUrl,
+                                badge: iconUrl,
+                                tag: 'test-notif'
+                              } as any);
+                            });
+                          } else {
+                            new Notification('co-calendar', { body: 'Valide ta journée pour Marina stp !', icon: iconUrl });
+                          }
+                        } else {
+                          Notification.requestPermission();
+                        }
+                      }}
+                      className="w-full py-2 text-xs text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors"
+                    >
+                      Tester la notification
+                    </button>
                   </motion.div>
                 )}
 
