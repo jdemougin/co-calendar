@@ -1,0 +1,21 @@
+{
+  "name": "TPS Planner",
+  "short_name": "TPS",
+  "description": "Planification simplifiée des activités TPS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/tps/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/seed/tps/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

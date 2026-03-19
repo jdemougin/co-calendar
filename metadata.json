@@ -1,0 +1,5 @@
+{
+  "name": "co-calendar",
+  "description": "Enregistrez vos activités quotidiennes (#CDA, #DAQ, etc.) et synchronisez-les avec vos agendas Google.",
+  "requestFramePermissions": []
+}
