@@ -756,7 +756,7 @@ export default function App() {
   if (isAuthenticated === null) return null;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans p-4 md:p-8">
+    <div className="h-screen overflow-y-auto overflow-x-hidden bg-[#f8fafc] text-slate-900 font-sans p-4 md:p-8">
       {/* Conflict Modal */}
       <AnimatePresence>
         {showConflictModal && (
@@ -1230,7 +1230,7 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="space-y-6 max-h-[70vh] overflow-y-auto">
+              <div className="space-y-6 max-h-[70vh] overflow-y-auto overflow-x-hidden">
                 {/* Déconnexion */}
                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
                   <div className="flex items-center justify-between mb-3">
