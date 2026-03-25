@@ -29,6 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     user_id: userId,
     subscription,
     notif_time: notifTime ?? '16:30',
+    last_sent_date: null,
     updated_at: new Date().toISOString(),
   });
 
