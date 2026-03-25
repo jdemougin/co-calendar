@@ -242,6 +242,8 @@ export default function App() {
       }).format(yesterday);
       const lastLog = localStorage.getItem('lastLogDate');
       if (lastLog === yesterdayStr) return;
+      const day = yesterday.getDay(); // 0=dim, 6=sam
+      if (day === 0 || day === 6) return;
 
       const refId = selectedCalendars[1];
       let m: Activity = { category: '#divsem', type: 'Rien' };
