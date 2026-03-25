@@ -229,9 +229,9 @@ export default function App() {
     };
   }, []);
 
-  // Auto-log à minuit si journée non remplie
+  // Auto-log à l'ouverture de l'app si la veille n'a pas été loguée
   useEffect(() => {
-    const autoLogMidnight = async () => {
+    const autoLogYesterday = async () => {
       if (!isAuthenticated || selectedCalendars.length < 2) return;
       const now = new Date();
       const yesterday = new Date(now);
@@ -269,18 +269,7 @@ export default function App() {
       } catch {}
     };
 
-    const checkMidnight = () => {
-      const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false
-      }).formatToParts(new Date());
-      const h = parts.find(p => p.type === 'hour')?.value ?? '01';
-      const m = parts.find(p => p.type === 'minute')?.value ?? '00';
-      if ((h === '00' || h === '24') && m === '00') autoLogMidnight();
-    };
-
-    checkMidnight();
-    const interval = setInterval(checkMidnight, 60000);
-    return () => clearInterval(interval);
+    autoLogYesterday();
   }, [isAuthenticated, selectedCalendars]);
 
   // Abonnement push serveur — l'unique source de vérité pour les notifications
