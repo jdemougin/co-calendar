@@ -8,6 +8,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
+  try {
   const supabase = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -56,4 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   res.status(200).json({ time: currentTime, results });
+  } catch (e: any) {
+    res.status(500).json({ crashed: true, error: e?.message, stack: e?.stack?.split('\n').slice(0, 5) });
+  }
 }
