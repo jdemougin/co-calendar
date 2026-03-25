@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CheckCircle2, LogIn, Settings, Clock, AlertCircle, ChevronRight, Copy, ArrowDown, ChevronDown, Check, Zap, RefreshCw } from 'lucide-react';
+import { CheckCircle2, LogIn, Settings, Clock, AlertCircle, ChevronRight, Copy, ArrowDown, ChevronDown, Check, Zap, RefreshCw, Moon, Sun } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -65,7 +65,7 @@ function CustomSelect({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 flex items-center justify-between hover:border-indigo-200 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
+        className="w-full p-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between hover:border-indigo-200 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
       >
         <span className="truncate mr-2">
           {isCustom ? `${prefix}${value.replace(new RegExp(`^${prefix}`), '')}` : value}
@@ -96,13 +96,13 @@ function CustomSelect({
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col"
+                className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col"
               >
-                <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+                <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{title}</span>
-                  <button 
+                  <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                   >
                     <ChevronDown size={20} className="text-slate-400" />
                   </button>
@@ -128,7 +128,7 @@ function CustomSelect({
                             className={`w-full px-4 py-3 rounded-2xl text-base font-bold flex items-center justify-between transition-all ${
                               value === item
                                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                                : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-transparent hover:border-slate-200'
+                                : 'bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-transparent hover:border-slate-200 dark:hover:border-slate-500'
                             }`}
                           >
                             <span>{item}</span>
@@ -140,20 +140,20 @@ function CustomSelect({
                   ))}
                 </div>
                 
-                <div className="p-4 bg-slate-50/50 space-y-3 shrink-0 border-t border-slate-100">
+                <div className="p-4 bg-slate-50/50 dark:bg-slate-800/50 space-y-3 shrink-0 border-t border-slate-100 dark:border-slate-700">
                   <div className="relative">
                     <input
                       type="text"
                       placeholder={placeholder}
                       value={isCustom ? value : ''}
                       onChange={(e) => onChange(e.target.value)}
-                      className="w-full py-4 pl-12 pr-4 bg-white border border-indigo-100 rounded-2xl text-sm font-bold text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-inner"
+                      className="w-full py-4 pl-12 pr-4 bg-white dark:bg-slate-700 border border-indigo-100 dark:border-slate-600 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-inner"
                     />
                     <Settings size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-400" />
                   </div>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="w-full py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-colors"
+                    className="w-full py-3 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-sm font-bold text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
                   >
                     Fermer
                   </button>
@@ -192,6 +192,7 @@ export default function App() {
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('notifEnabled') === 'true');
   const [notifTime, setNotifTime] = useState(() => localStorage.getItem('notifTime') || '16:30');
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
 
   const getAuthHeader = () => {
     const tokens = localStorage.getItem('google_tokens');
@@ -307,6 +308,10 @@ export default function App() {
     localStorage.setItem('notifEnabled', String(notifEnabled));
     localStorage.setItem('notifTime', notifTime);
   }, [notifEnabled, notifTime]);
+
+  useEffect(() => {
+    localStorage.setItem('darkMode', String(darkMode));
+  }, [darkMode]);
 
   useEffect(() => {
     if (isAuthenticated && selectedCalendars.length === 2) {
@@ -752,7 +757,7 @@ export default function App() {
   if (isAuthenticated === null) return null;
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden bg-[#f8fafc] text-slate-900 font-sans p-4 md:p-8">
+    <div className={`h-full overflow-y-auto overflow-x-hidden bg-[#f8fafc] dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans p-4 md:p-8 ${darkMode ? 'dark' : ''}`}>
       {/* Conflict Modal */}
       <AnimatePresence>
         {showConflictModal && (
@@ -761,20 +766,20 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6"
             >
               <div className="flex items-center gap-3 text-amber-600 mb-4">
                 <AlertCircle size={24} />
                 <h3 className="text-lg font-semibold">Événement détecté</h3>
               </div>
               
-              <p className="text-slate-600 mb-4">
+              <p className="text-slate-600 dark:text-slate-400 mb-4">
                 Des événements existent déjà dans votre agenda principal (<b>{refCalName}</b>) pour aujourd'hui :
               </p>
               
               <div className="space-y-2 mb-6 max-h-48 overflow-y-auto">
                 {conflicts.map((e, i) => (
-                  <div key={i} className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-sm">
+                  <div key={i} className="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border border-slate-100 dark:border-slate-600 text-sm">
                     <div className="font-medium">{e.summary}</div>
                     <div className="text-[10px] text-slate-400 uppercase tracking-widest">
                       {new Date(e.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
@@ -783,14 +788,14 @@ export default function App() {
                 ))}
               </div>
               
-              <p className="text-sm text-slate-500 mb-6">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
                 Voulez-vous tout de même ajouter vos activités à l'agenda <b>{targetCalName}</b> ?
               </p>
               
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConflictModal(false)}
-                  className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                 >
                   Modifier
                 </button>
@@ -819,7 +824,7 @@ export default function App() {
             {!isAuthenticated ? (
               <button
                 onClick={handleLogin}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-full text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors shadow-sm"
               >
                 <LogIn size={16} />
                 Se connecter
@@ -828,14 +833,21 @@ export default function App() {
               <>
                 <button
                   onClick={() => window.location.reload()}
-                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 rounded-lg transition-all"
                   title="Rafraîchir"
                 >
                   <RefreshCw size={20} />
                 </button>
                 <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 rounded-lg transition-all"
+                  title="Thème sombre"
+                >
+                  {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+                <button
                   onClick={() => setShowSettings(true)}
-                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 rounded-lg transition-all"
                   title="Paramètres"
                 >
                   <Settings size={20} />
@@ -849,13 +861,13 @@ export default function App() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-center"
+            className="bg-white dark:bg-slate-800 p-8 rounded-2xl border border-slate-200 dark:border-slate-600 shadow-sm text-center"
           >
-            <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <Zap className="text-indigo-600" size={32} />
             </div>
             <h2 className="text-lg font-medium mb-2">Bienvenue</h2>
-            <p className="text-slate-500 mb-6">Connectez votre compte Google pour synchroniser vos activités avec vos agendas.</p>
+            <p className="text-slate-500 dark:text-slate-400 mb-6">Connectez votre compte Google pour synchroniser vos activités avec vos agendas.</p>
             <button
               onClick={handleLogin}
               className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
@@ -867,9 +879,9 @@ export default function App() {
           <div className="space-y-6">
             {/* Calendar Selection (Hidden when locked) */}
             {!isLocked && (
-              <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <section className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-600 shadow-sm dark:shadow-slate-900">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-slate-700">
+                  <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                     <Settings size={18} />
                     <h2 className="font-medium">Configuration des Agendas</h2>
                   </div>
@@ -881,16 +893,16 @@ export default function App() {
                     {calendarLoading ? 'Chargement...' : 'Actualiser'}
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mb-4">Sélectionnez les 2 agendas où enregistrer vos activités.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Sélectionnez les 2 agendas où enregistrer vos activités.</p>
                 
                 {calendarLoading ? (
-                  <div className="py-8 text-center text-slate-400 text-sm italic">
+                  <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-sm italic">
                     Chargement de vos agendas...
                   </div>
                 ) : calendars.length === 0 ? (
-                  <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    <p className="text-sm text-slate-500 mb-2">Aucun agenda trouvé.</p>
-                    <p className="text-xs text-slate-400 px-4">Assurez-vous d'avoir accepté les permissions Google Calendar lors de la connexion.</p>
+                  <div className="py-8 text-center bg-slate-50 dark:bg-slate-700 rounded-xl border border-dashed border-slate-200 dark:border-slate-600">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Aucun agenda trouvé.</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 px-4">Assurez-vous d'avoir accepté les permissions Google Calendar lors de la connexion.</p>
                   </div>
                 ) : (
                   <>
@@ -909,8 +921,8 @@ export default function App() {
                             }}
                             className={`p-3 rounded-xl border text-left text-sm transition-all ${
                               selectedCalendars.includes(cal.id)
-                                ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                                : 'border-slate-100 hover:border-slate-300'
+                                ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                                : 'border-slate-100 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-500 dark:text-slate-300'
                             }`}
                           >
                             <div className="font-medium truncate">{cal.summary}</div>
@@ -955,7 +967,7 @@ export default function App() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   className={`p-4 rounded-xl flex items-start gap-3 ${
-                    status.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-rose-50 text-rose-800 border border-rose-100'
+                    status.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 border border-emerald-100 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border border-rose-100 dark:border-rose-800'
                   }`}
                 >
                   {status.type === 'success' ? <CheckCircle2 size={20} className="shrink-0 mt-0.5" /> : <AlertCircle size={20} className="shrink-0 mt-0.5" />}
@@ -975,9 +987,9 @@ export default function App() {
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm overflow-hidden relative"
+                  className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-800 shadow-sm dark:shadow-slate-900 overflow-hidden relative"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/30 rounded-full -mr-16 -mt-16 opacity-50" />
                   
                   <div className="relative z-10">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -987,12 +999,12 @@ export default function App() {
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="font-semibold">Journée déjà enregistrée</h3>
-                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wider">Terminé</span>
+                          <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold rounded-full uppercase tracking-wider">Terminé</span>
                         </div>
                       </div>
                       <button 
                         onClick={() => setIsEditing(true)}
-                        className="w-full sm:w-auto px-3 py-1.5 bg-slate-50 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-100 transition-colors flex items-center justify-center gap-1.5 border border-slate-100"
+                        className="w-full sm:w-auto px-3 py-1.5 bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-1.5 border border-slate-100 dark:border-slate-600"
                       >
                         <Settings size={14} />
                         Modifier
@@ -1003,7 +1015,7 @@ export default function App() {
                       {['08:30', '13:00'].map((time, idx) => {
                         const event = todayEvents.find(e => e.start?.includes(time));
                         return (
-                          <div key={time} className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm">
+                          <div key={time} className="p-4 rounded-xl bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 shadow-sm dark:shadow-slate-900">
                             <div className="flex items-center gap-2 mb-2">
                               <Clock size={12} className="text-slate-400" />
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -1013,7 +1025,7 @@ export default function App() {
                             {event ? (
                               <div className="flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                                <div className="text-sm font-medium text-slate-700">
+                                <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
                                   {event.summary}
                                 </div>
                               </div>
@@ -1037,7 +1049,7 @@ export default function App() {
                     {isEditing && todayEvents.length > 0 && (
                       <button 
                         onClick={() => setIsEditing(false)}
-                        className="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-slate-200 transition-colors"
+                        className="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                       >
                         Annuler
                       </button>
@@ -1048,7 +1060,7 @@ export default function App() {
                     {/* Morning Slot */}
                     <div className="relative flex gap-6">
                       <div className="flex-1 space-y-4">
-                        <div className={`bg-white p-5 rounded-2xl border-2 ${isMorningPreFilled ? 'border-orange-400 bg-orange-50/50' : 'border-slate-200'} shadow-sm hover:border-indigo-200 transition-all`}>
+                        <div className={`bg-white dark:bg-slate-800 p-5 rounded-2xl border-2 ${isMorningPreFilled ? 'border-orange-400 bg-orange-50/50 dark:bg-orange-900/20' : 'border-slate-200 dark:border-slate-600'} shadow-sm dark:shadow-slate-900 hover:border-indigo-200 dark:hover:border-indigo-700 transition-all`}>
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Matinée</span>
@@ -1069,7 +1081,7 @@ export default function App() {
                                   setAfternoon({ ...morning });
                                   setIsAfternoonPreFilled(false);
                                 }}
-                                className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 text-indigo-600 rounded-md text-[9px] font-bold uppercase hover:bg-indigo-100 transition-colors"
+                                className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-md text-[9px] font-bold uppercase hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
                                 title="Copier vers l'après-midi"
                               >
                                 <Copy size={10} />
@@ -1099,7 +1111,7 @@ export default function App() {
                                   initial={{ opacity: 0, height: 0 }}
                                   animate={{ opacity: 1, height: 'auto' }}
                                   exit={{ opacity: 0, height: 0 }}
-                                  className="pt-3 border-t border-slate-50 overflow-hidden"
+                                  className="pt-3 border-t border-slate-50 dark:border-slate-700 overflow-hidden"
                                 >
                                   <CustomSelect
                                     value={morning.type}
@@ -1123,7 +1135,7 @@ export default function App() {
                     {/* Afternoon Slot */}
                     <div className="relative flex gap-6">
                       <div className="flex-1 space-y-4">
-                        <div className={`bg-white p-5 rounded-2xl border-2 ${isAfternoonPreFilled ? 'border-orange-400 bg-orange-50/50' : 'border-slate-200'} shadow-sm hover:border-indigo-200 transition-all`}>
+                        <div className={`bg-white dark:bg-slate-800 p-5 rounded-2xl border-2 ${isAfternoonPreFilled ? 'border-orange-400 bg-orange-50/50 dark:bg-orange-900/20' : 'border-slate-200 dark:border-slate-600'} shadow-sm dark:shadow-slate-900 hover:border-indigo-200 dark:hover:border-indigo-700 transition-all`}>
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Après-midi</span>
@@ -1161,7 +1173,7 @@ export default function App() {
                                   initial={{ opacity: 0, height: 0 }}
                                   animate={{ opacity: 1, height: 'auto' }}
                                   exit={{ opacity: 0, height: 0 }}
-                                  className="pt-3 border-t border-slate-50 overflow-hidden"
+                                  className="pt-3 border-t border-slate-50 dark:border-slate-700 overflow-hidden"
                                 >
                                   <CustomSelect
                                     value={afternoon.type}
@@ -1217,29 +1229,29 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden p-4"
+              className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden p-4"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-slate-900">Paramètres</h3>
-                <button 
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Paramètres</h3>
+                <button
                   onClick={() => setShowSettings(false)}
-                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                 >
                   <ChevronDown size={20} className="text-slate-400" />
                 </button>
               </div>
 
-              <div className="space-y-6 max-h-[70vh] overflow-y-auto overflow-x-hidden">
+              <div className="space-y-6 max-h-[70vh] overflow-y-auto overflow-x-hidden no-scrollbar">
                 {/* Déconnexion */}
-                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl border border-emerald-100 dark:border-emerald-800">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                      <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 rounded-lg">
                         <CheckCircle2 size={18} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-slate-700">Compte connecté</p>
-                        <p className="text-[10px] text-slate-400">Vous êtes authentifié</p>
+                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Compte connecté</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500">Vous êtes authentifié</p>
                       </div>
                     </div>
                   </div>
@@ -1255,17 +1267,17 @@ export default function App() {
                 {/* Changer les agendas */}
                 {isLocked && calendars.length > 0 && (
                   <div className="space-y-3">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Modifier les agendas</h4>
+                    <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Modifier les agendas</h4>
                     <div className="space-y-2">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Agenda cible (TPS)</label>
+                        <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Agenda cible (TPS)</label>
                         <select
                           value={selectedCalendars[0] || ''}
                           onChange={(e) => {
                             const newIds = [e.target.value, selectedCalendars[1]];
                             saveCalendars(newIds);
                           }}
-                          className="w-full mt-1 p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                          className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                         >
                           <option value="">Choisir...</option>
                           {calendars.map(cal => (
@@ -1274,14 +1286,14 @@ export default function App() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Agenda référence (Vérif)</label>
+                        <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Agenda référence (Vérif)</label>
                         <select
                           value={selectedCalendars[1] || ''}
                           onChange={(e) => {
                             const newIds = [selectedCalendars[0], e.target.value];
                             saveCalendars(newIds);
                           }}
-                          className="w-full mt-1 p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                          className="w-full mt-1 p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                         >
                           <option value="">Choisir...</option>
                           {calendars.map(cal => (
@@ -1294,14 +1306,14 @@ export default function App() {
                 )}
 
                 {/* Notifications */}
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700 rounded-2xl border border-slate-100 dark:border-slate-600">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                    <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg">
                       <Clock size={18} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-700">Notifications</p>
-                      <p className="text-[10px] text-slate-400">Rappel quotidien</p>
+                      <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Notifications</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">Rappel quotidien</p>
                     </div>
                   </div>
                   <button
@@ -1331,13 +1343,13 @@ export default function App() {
                     animate={{ opacity: 1, height: 'auto' }}
                     className="space-y-2"
                   >
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Heure du rappel — sauvegardé automatiquement ✓</label>
+                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Heure du rappel — sauvegardé automatiquement ✓</label>
                     <div className="relative">
                       <input
                         type="time"
                         value={notifTime}
                         onChange={(e) => setNotifTime(e.target.value)}
-                        className="w-full p-4 pr-12 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                        className="w-full p-4 pr-12 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                       />
                       <Clock size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                     </div>
@@ -1361,7 +1373,7 @@ export default function App() {
                           Notification.requestPermission();
                         }
                       }}
-                      className="w-full py-2 text-xs text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors"
+                      className="w-full py-2 text-xs text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
                     >
                       Tester la notification
                     </button>
@@ -1370,8 +1382,8 @@ export default function App() {
 
                 {/* Debug Info */}
                 {debugInfo && (
-                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                    <p className="text-[10px] text-slate-500 font-mono leading-relaxed space-y-1">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border border-slate-100 dark:border-slate-600">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono leading-relaxed space-y-1">
                       <div>Debug: {debugInfo}</div>
                       <div className="text-indigo-500">Cible (TPS): {targetCalName || 'Non défini'}</div>
                       <div className="text-amber-500">Référence (Vérif): {refCalName || 'Non défini'}</div>
@@ -1379,12 +1391,12 @@ export default function App() {
                   </div>
                 )}
 
-                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                  <div className="flex items-center gap-2 text-amber-700 mb-2">
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/30 rounded-2xl border border-amber-100 dark:border-amber-800">
+                  <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 mb-2">
                     <AlertCircle size={16} />
                     <p className="text-xs font-bold">Installation mobile</p>
                   </div>
-                  <p className="text-[11px] text-amber-600 leading-relaxed mb-4">
+                  <p className="text-[11px] text-amber-600 dark:text-amber-400 leading-relaxed mb-4">
                     Pour installer l'app sur votre téléphone : 
                     <br /><b>iOS :</b> Partager {'>'} Sur l'écran d'accueil
                     <br /><b>Android :</b> Menu (⋮) {'>'} Installer l'application
@@ -1414,14 +1426,14 @@ export default function App() {
                     setShowSettings(false);
                     window.location.reload();
                   }}
-                  className="w-full py-2 text-slate-500 hover:text-slate-700 underline text-xs font-medium"
+                  className="w-full py-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline text-xs font-medium"
                 >
                   Réinitialiser la configuration des agendas
                 </button>
 
                 <button
                   onClick={() => setShowSettings(false)}
-                  className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-slate-800 transition-all"
+                  className="w-full py-4 bg-slate-900 dark:bg-slate-700 text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-slate-800 dark:hover:bg-slate-600 transition-all"
                 >
                   Fermer
                 </button>
