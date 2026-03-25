@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { google } from 'googleapis';
-import { isValidDateParam } from '../shared/api-utils';
+function isValidDateParam(date: unknown): date is string {
+  return typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date);
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const authHeader = req.headers.authorization;

@@ -1,7 +1,19 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
-import { getParisParts } from '../../shared/api-utils';
+function getParisParts(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(date);
+  const get = (t: string) => parts.find(p => p.type === t)?.value ?? '00';
+  const h = get('hour') === '24' ? '00' : get('hour');
+  return {
+    time: `${h.padStart(2, '0')}:${get('minute').padStart(2, '0')}`,
+    date: `${get('year')}-${get('month')}-${get('day')}`,
+  };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
