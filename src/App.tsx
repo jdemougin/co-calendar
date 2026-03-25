@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { CheckCircle2, LogIn, Settings, Clock, AlertCircle, ChevronRight, Copy, ArrowDown, ChevronDown, Check, Zap } from 'lucide-react';
+import { CheckCircle2, LogIn, Settings, Clock, AlertCircle, ChevronRight, Copy, ArrowDown, ChevronDown, Check, Zap, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -830,6 +830,13 @@ export default function App() {
                   <CheckCircle2 size={16} className="text-emerald-500" />
                   Connecté
                 </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                  title="Rafraîchir"
+                >
+                  <RefreshCw size={20} />
+                </button>
                 <button
                   onClick={() => setShowSettings(true)}
                   className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
