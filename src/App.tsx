@@ -1,34 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { CheckCircle2, LogIn, Settings, Clock, AlertCircle, ChevronRight, Copy, ArrowDown, ChevronDown, Check, Zap, RefreshCw, Moon, Sun } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = window.atob(base64);
-  const output = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) output[i] = raw.charCodeAt(i);
-  return output;
-}
-
-const CATEGORY_GROUPS = [
-  {
-    label: 'Formations',
-    items: ['#cda', '#daq', '#dwwm', '#formation']
-  },
-  {
-    label: 'Divers',
-    items: ['#divsem']
-  }
-];
-
-const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
-const TYPES = ['Cours', 'Prépa', 'Rien', 'Autre...'];
-
-interface Activity {
-  category: string;
-  type: string;
-}
+import { Activity, CATEGORY_GROUPS, CATEGORIES, TYPES, parseEventToActivity, getUnloggedWeekdays, urlBase64ToUint8Array } from './lib/utils';
 function CustomSelect({ 
   value, 
   onChange, 
@@ -266,27 +239,12 @@ export default function App() {
     const autoLogYesterday = async () => {
       if (!isAuthenticated || selectedCalendars.length < 2) return;
       const lastLog = localStorage.getItem('lastLogDate');
-      const now = new Date();
-      const refId = selectedCalendars[1];
-
-      // Collecte les jours ouvrés non loggués (du plus récent au plus ancien)
-      const toLog: string[] = [];
-      const candidate = new Date(now);
-      for (let i = 0; i < 7; i++) {
-        candidate.setDate(candidate.getDate() - 1);
-        const day = candidate.getDay();
-        if (day === 0 || day === 6) continue;
-        const dateStr = new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
-        }).format(candidate);
-        if (lastLog && lastLog >= dateStr) break;
-        toLog.push(dateStr);
-      }
-
+      const toLog = getUnloggedWeekdays(new Date(), lastLog);
       if (toLog.length === 0) return;
 
-      // Log du plus ancien au plus récent
-      for (const dateStr of toLog.reverse()) {
+      const refId = selectedCalendars[1];
+
+      for (const dateStr of toLog) {
         let m: Activity = { category: '#divsem', type: 'Rien' };
         let a: Activity = { category: '#divsem', type: 'Rien' };
 
@@ -301,16 +259,26 @@ export default function App() {
             if (morningEvent) m = parseEventToActivity(morningEvent);
             if (afternoonEvent) a = parseEventToActivity(afternoonEvent);
           }
-        } catch {}
+        } catch (e) {
+          console.warn(`Auto-log: could not fetch ref calendar for ${dateStr}`, e);
+        }
 
         try {
-          await fetch('/api/log-activity', {
+          const logRes = await fetch('/api/log-activity', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
             body: JSON.stringify({ morning: m, afternoon: a, calendars: [selectedCalendars[0]], date: dateStr }),
           });
+          if (!logRes.ok) {
+            if (logRes.status === 401 || logRes.status === 403) break; // token expiré, arrêter
+            console.warn(`Auto-log: server error ${logRes.status} for ${dateStr}`);
+            continue;
+          }
           localStorage.setItem('lastLogDate', dateStr);
-        } catch {}
+        } catch (e) {
+          console.warn(`Auto-log: network error for ${dateStr}`, e);
+          break;
+        }
       }
     };
 
@@ -403,45 +371,6 @@ export default function App() {
     } catch (e) {
       console.error('Error fetching today events:', e);
     }
-  };
-
-  const parseEventToActivity = (event: any): Activity => {
-    if (!event) return { category: '', type: '' };
-    const summary = (event.summary || '').trim();
-    
-    // 1. Logic based on # (Category is the word starting with #, Type is everything after)
-    if (summary.includes('#')) {
-      const parts = summary.split(' ');
-      const categoryIndex = parts.findIndex(p => p.startsWith('#'));
-      if (categoryIndex !== -1) {
-        const category = parts[categoryIndex].toLowerCase();
-        const type = parts.slice(categoryIndex + 1).join(' ').trim();
-        return { category, type: type || 'Rien' };
-      }
-    }
-
-    // 2. Fallback: Split by " - " if standard format
-    if (summary.includes(' - ')) {
-      const [cat, type] = summary.split(' - ');
-      return { category: cat.trim().toLowerCase(), type: type.trim() };
-    }
-
-    // 3. Smart matching for known categories (e.g., #cda, #daq, #dwwm)
-    const foundCategory = CATEGORIES.find(cat => 
-      summary.toUpperCase().includes(cat.toUpperCase())
-    );
-    
-    if (foundCategory) {
-      const remaining = summary.toUpperCase().replace(foundCategory.toUpperCase(), '').trim();
-      const foundType = TYPES.find(t => t !== 'Autre...' && remaining.includes(t.toUpperCase()));
-      return { category: foundCategory, type: foundType || remaining || 'Rien' };
-    }
-
-    // Default to raw summary if no match
-    return { 
-      category: summary, 
-      type: 'Rien' 
-    };
   };
 
   const checkAuth = async () => {

@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { google } from 'googleapis';
+import { isValidDateParam } from './lib/utils';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const authHeader = req.headers.authorization;
@@ -26,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   client.setCredentials(tokens);
   const calendar = google.calendar({ version: 'v3', auth: client });
 
-  const parisDate = typeof date === 'string' && date
+  const parisDate = isValidDateParam(date)
     ? date
     : new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit',
