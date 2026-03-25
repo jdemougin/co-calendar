@@ -46,7 +46,7 @@ export function parseEventToActivity(event: any): Activity {
  * Returns unlogged weekdays from yesterday back (oldest first, max maxDays iterations).
  * Uses YYYY-MM-DD format — lexicographic order equals chronological order for this format.
  */
-export function getUnloggedWeekdays(now: Date, lastLog: string | null, maxDays = 7): string[] {
+export function getUnloggedWeekdays(now: Date, lastLog: string | null, maxDays = 21): string[] {
   const toLog: string[] = [];
   const candidate = new Date(now);
   for (let i = 0; i < maxDays; i++) {

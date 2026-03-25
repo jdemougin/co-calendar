@@ -1142,7 +1142,7 @@ export default function App() {
                   <button
                     onClick={handleSubmit}
                     disabled={loading || selectedCalendars.length !== 2 || !morning.category || !afternoon.category}
-                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 disabled:opacity-30 disabled:shadow-none flex items-center justify-center gap-3 group overflow-hidden relative"
+                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/30 disabled:opacity-30 disabled:shadow-none flex items-center justify-center gap-3 group overflow-hidden relative"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     {loading ? 'Traitement en cours...' : 'VALIDER LA JOURNÉE'}
