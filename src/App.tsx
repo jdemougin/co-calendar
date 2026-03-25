@@ -1287,13 +1287,23 @@ export default function App() {
                     animate={{ opacity: 1, height: 'auto' }}
                     className="space-y-2"
                   >
-                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Heure du rappel — sauvegardé automatiquement ✓</label>
-                    <input
-                      type="time"
-                      value={notifTime}
-                      onChange={(e) => setNotifTime(e.target.value)}
-                      className="w-full p-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                    />
+                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700 rounded-2xl border border-slate-100 dark:border-slate-600">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg">
+                          <Clock size={18} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Heure du rappel</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500">Sauvegardé automatiquement</p>
+                        </div>
+                      </div>
+                      <input
+                        type="time"
+                        value={notifTime}
+                        onChange={(e) => setNotifTime(e.target.value)}
+                        className="w-28 p-2 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-center"
+                      />
+                    </div>
                     <button
                       onClick={() => {
                         const iconUrl = `${window.location.origin}/icon-192.png`;
