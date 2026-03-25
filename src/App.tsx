@@ -1185,7 +1185,7 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="space-y-6 max-h-[70vh] overflow-y-auto overflow-x-hidden no-scrollbar">
+              <div className="space-y-6 max-h-[70vh] overflow-y-auto no-scrollbar">
                 {/* Déconnexion */}
                 <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl border border-emerald-100 dark:border-emerald-800">
                   <div className="flex items-center justify-between mb-3">
