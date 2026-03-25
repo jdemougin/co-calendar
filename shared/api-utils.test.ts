@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getParisParts, isValidDateParam } from './utils';
+import { getParisParts, isValidDateParam } from './api-utils';
 
 describe('getParisParts', () => {
   it('returns time and date in YYYY-MM-DD / HH:MM format', () => {
