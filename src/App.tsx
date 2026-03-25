@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { CheckCircle2, LogIn, Settings, Clock, AlertCircle, ChevronRight, Copy, ArrowDown, ChevronDown, Check, Zap, RefreshCw, Moon, Sun } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -194,10 +194,10 @@ export default function App() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
 
-  const getAuthHeader = () => {
+  const getAuthHeader = useCallback(() => {
     const tokens = localStorage.getItem('google_tokens');
     return tokens ? { 'Authorization': `Bearer ${tokens}` } : {};
-  };
+  }, []);
 
   useEffect(() => {
     const tokens = localStorage.getItem('google_tokens');
@@ -230,58 +230,7 @@ export default function App() {
     };
   }, []);
 
-  // Auto-log à l'ouverture de l'app si la veille n'a pas été loguée
-  useEffect(() => {
-    const autoLogYesterday = async () => {
-      if (!isAuthenticated || selectedCalendars.length < 2) return;
-      const now = new Date();
-      const yesterday = new Date(now);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
-      }).format(yesterday);
-      const lastLog = localStorage.getItem('lastLogDate');
-      if (lastLog === yesterdayStr) return;
-      const day = yesterday.getDay(); // 0=dim, 6=sam
-      if (day === 0 || day === 6) return;
-
-      const refId = selectedCalendars[1];
-      let m: Activity = { category: '#divsem', type: 'Rien' };
-      let a: Activity = { category: '#divsem', type: 'Rien' };
-
-      try {
-        const res = await fetch(`/api/check-conflicts?calendarId=${refId}&date=${yesterdayStr}`, {
-          headers: getAuthHeader()
-        });
-        if (res.ok) {
-          const refData = await res.json();
-          const morningEvent = refData.find((e: any) => e.start?.includes('08:30'));
-          const afternoonEvent = refData.find((e: any) => e.start?.includes('13:00'));
-          if (morningEvent) m = parseEventToActivity(morningEvent);
-          if (afternoonEvent) a = parseEventToActivity(afternoonEvent);
-        }
-      } catch {}
-
-      try {
-        await fetch('/api/log-activity', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-          body: JSON.stringify({ morning: m, afternoon: a, calendars: [selectedCalendars[0]], date: yesterdayStr }),
-        });
-        localStorage.setItem('lastLogDate', yesterdayStr);
-      } catch {}
-    };
-
-    autoLogYesterday();
-  }, [isAuthenticated, selectedCalendars]);
-
-  // Abonnement push serveur — l'unique source de vérité pour les notifications
-  useEffect(() => {
-    if (!notifEnabled) return;
-    subscribeToPush(notifTime);
-  }, [notifEnabled, notifTime]);
-
-  const subscribeToPush = async (time: string) => {
+  const subscribeToPush = useCallback(async (time: string) => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
     if (Notification.permission !== 'granted') return;
     const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
@@ -304,7 +253,69 @@ export default function App() {
     } catch (e) {
       console.error('Push subscription failed:', e);
     }
-  };
+  }, [getAuthHeader]);
+
+  // Abonnement push serveur — l'unique source de vérité pour les notifications
+  useEffect(() => {
+    if (!notifEnabled) return;
+    subscribeToPush(notifTime);
+  }, [notifEnabled, notifTime, subscribeToPush]);
+
+  // Auto-log à l'ouverture : remonte au dernier jour ouvré non logué (max 7 jours)
+  useEffect(() => {
+    const autoLogYesterday = async () => {
+      if (!isAuthenticated || selectedCalendars.length < 2) return;
+      const lastLog = localStorage.getItem('lastLogDate');
+      const now = new Date();
+      const refId = selectedCalendars[1];
+
+      // Collecte les jours ouvrés non loggués (du plus récent au plus ancien)
+      const toLog: string[] = [];
+      const candidate = new Date(now);
+      for (let i = 0; i < 7; i++) {
+        candidate.setDate(candidate.getDate() - 1);
+        const day = candidate.getDay();
+        if (day === 0 || day === 6) continue;
+        const dateStr = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(candidate);
+        if (lastLog && lastLog >= dateStr) break;
+        toLog.push(dateStr);
+      }
+
+      if (toLog.length === 0) return;
+
+      // Log du plus ancien au plus récent
+      for (const dateStr of toLog.reverse()) {
+        let m: Activity = { category: '#divsem', type: 'Rien' };
+        let a: Activity = { category: '#divsem', type: 'Rien' };
+
+        try {
+          const res = await fetch(`/api/check-conflicts?calendarId=${refId}&date=${dateStr}`, {
+            headers: getAuthHeader()
+          });
+          if (res.ok) {
+            const refData = await res.json();
+            const morningEvent = refData.find((e: any) => e.start?.includes('08:30'));
+            const afternoonEvent = refData.find((e: any) => e.start?.includes('13:00'));
+            if (morningEvent) m = parseEventToActivity(morningEvent);
+            if (afternoonEvent) a = parseEventToActivity(afternoonEvent);
+          }
+        } catch {}
+
+        try {
+          await fetch('/api/log-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            body: JSON.stringify({ morning: m, afternoon: a, calendars: [selectedCalendars[0]], date: dateStr }),
+          });
+          localStorage.setItem('lastLogDate', dateStr);
+        } catch {}
+      }
+    };
+
+    autoLogYesterday();
+  }, [isAuthenticated, selectedCalendars, getAuthHeader]);
 
   useEffect(() => {
     localStorage.setItem('notifEnabled', String(notifEnabled));
@@ -761,7 +772,7 @@ export default function App() {
   if (isAuthenticated === null) return null;
 
   return (
-    <div className={`h-full overflow-y-auto overflow-x-hidden bg-[#f8fafc] dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans p-4 md:p-8 ${darkMode ? 'dark' : ''}`}>
+    <div className="h-full overflow-y-auto overflow-x-hidden bg-[#f8fafc] dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans p-4 md:p-8">
       {/* Conflict Modal */}
       <AnimatePresence>
         {showConflictModal && (

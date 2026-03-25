@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
-  const { calendarId } = req.query;
+  const { calendarId, date } = req.query;
   if (!calendarId || typeof calendarId !== 'string') {
     return res.status(400).json({ error: 'Missing calendarId' });
   }
@@ -26,13 +26,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   client.setCredentials(tokens);
   const calendar = google.calendar({ version: 'v3', auth: client });
 
-  const now = new Date();
-  const parisDate = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Paris',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(now);
+  const parisDate = typeof date === 'string' && date
+    ? date
+    : new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(new Date());
 
   const timeMin = `${parisDate}T00:00:00Z`;
   const timeMax = `${parisDate}T23:59:59Z`;
