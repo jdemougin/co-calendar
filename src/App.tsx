@@ -807,15 +807,15 @@ export default function App() {
       </AnimatePresence>
 
       <div className="max-w-2xl mx-auto">
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <header className="flex items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-600 rounded-lg text-white">
               <Zap size={24} />
             </div>
             <h1 className="text-xl font-semibold tracking-tight">co-calendar</h1>
           </div>
-          
-          <div className="flex items-center justify-between sm:justify-end gap-3">
+
+          <div className="flex items-center gap-2">
             {!isAuthenticated ? (
               <button
                 onClick={handleLogin}
@@ -825,11 +825,7 @@ export default function App() {
                 Se connecter
               </button>
             ) : (
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <CheckCircle2 size={16} className="text-emerald-500" />
-                  Connecté
-                </div>
+              <>
                 <button
                   onClick={() => window.location.reload()}
                   className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
@@ -844,7 +840,7 @@ export default function App() {
                 >
                   <Settings size={20} />
                 </button>
-              </div>
+              </>
             )}
           </div>
         </header>
@@ -1341,7 +1337,7 @@ export default function App() {
                         type="time"
                         value={notifTime}
                         onChange={(e) => setNotifTime(e.target.value)}
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                        className="w-full p-4 pr-12 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                       />
                       <Clock size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                     </div>
