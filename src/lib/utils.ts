@@ -15,30 +15,44 @@ export function parseEventToActivity(event: any): Activity {
   if (!event) return { category: '', type: '' };
   const summary = (event.summary || '').trim();
 
+  // Branch 1: explicit # prefix → "#dwwm - Cours" or "#dwwm Cours"
   if (summary.includes('#')) {
     const parts = summary.split(' ');
     const categoryIndex = parts.findIndex((p: string) => p.startsWith('#'));
     if (categoryIndex !== -1) {
       const category = parts[categoryIndex].toLowerCase();
-      const type = parts.slice(categoryIndex + 1).join(' ').trim();
+      const rawType = parts.slice(categoryIndex + 1).join(' ').trim();
+      // Strip leading "- " if present (e.g. "#dwwm - Cours" → type "Cours")
+      const type = rawType.replace(/^-\s*/, '').trim();
       return { category, type: type || 'Rien' };
     }
   }
 
-  if (summary.includes(' - ')) {
-    const [cat, type] = summary.split(' - ');
-    return { category: cat.trim().toLowerCase(), type: type.trim() };
-  }
-
+  // Branch 2: known category keyword (e.g. "Entretiens CDA - Camille / Julien" → #cda, Entretiens)
+  // Use part before " - " to avoid noise from the rest of the title
+  const summaryMain = summary.includes(' - ') ? summary.split(' - ')[0] : summary;
   const foundCategory = CATEGORIES.find(cat =>
-    summary.toUpperCase().includes(cat.toUpperCase()) ||
-    summary.toUpperCase().includes(cat.slice(1).toUpperCase())
+    summaryMain.toUpperCase().includes(cat.toUpperCase()) ||
+    summaryMain.toUpperCase().includes(cat.slice(1).toUpperCase())
   );
   if (foundCategory) {
     const slug = foundCategory.slice(1).toUpperCase();
-    const remaining = summary.toUpperCase().replace(foundCategory.toUpperCase(), '').replace(slug, '').trim();
-    const foundType = TYPES.find(t => t !== 'Autre...' && remaining.includes(t.toUpperCase()));
+    const remaining = summaryMain
+      .replace(new RegExp(foundCategory, 'i'), '')
+      .replace(new RegExp(slug, 'i'), '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    // Also look in the part after " - " for type hints (e.g. "formation - Cours")
+    const summaryRest = summary.includes(' - ') ? summary.split(' - ').slice(1).join(' - ') : '';
+    const typeContext = (remaining + ' ' + summaryRest).trim();
+    const foundType = TYPES.find(t => t !== 'Autre...' && typeContext.toUpperCase().includes(t.toUpperCase()));
     return { category: foundCategory, type: foundType || remaining || 'Rien' };
+  }
+
+  // Branch 3: generic "cat - type" format
+  if (summary.includes(' - ')) {
+    const [cat, type] = summary.split(' - ');
+    return { category: cat.trim().toLowerCase(), type: type.trim() };
   }
 
   return { category: '#divsem', type: 'Rien' };

@@ -18,14 +18,22 @@ describe('parseEventToActivity', () => {
     expect(parseEventToActivity({ summary: '#daq Prépa cours' })).toEqual({ category: '#daq', type: 'Prépa cours' });
   });
 
-  it('parses "cat - type" format (fallback) when no # prefix', () => {
-    // " - " fallback only triggers when no "#" present
-    expect(parseEventToActivity({ summary: 'formation - Cours' })).toEqual({ category: 'formation', type: 'Cours' });
+  it('detects known category "formation" without # prefix, reads type after dash', () => {
+    expect(parseEventToActivity({ summary: 'formation - Cours' })).toEqual({ category: '#formation', type: 'Cours' });
   });
 
-  it('parses "#dwwm - Cours" via # branch (type includes "- Cours")', () => {
-    // # branch wins: type = everything after #dwwm = "- Cours"
-    expect(parseEventToActivity({ summary: '#dwwm - Cours' })).toEqual({ category: '#dwwm', type: '- Cours' });
+  it('parses generic "cat - type" format for unknown categories', () => {
+    expect(parseEventToActivity({ summary: 'réunion - hebdo' })).toEqual({ category: 'réunion', type: 'hebdo' });
+  });
+
+  it('parses "#dwwm - Cours" via # branch, strips leading dash', () => {
+    expect(parseEventToActivity({ summary: '#dwwm - Cours' })).toEqual({ category: '#dwwm', type: 'Cours' });
+  });
+
+  it('extracts category from free-form title like "Entretiens CDA - Camille / Julien"', () => {
+    const result = parseEventToActivity({ summary: 'Entretiens CDA - Camille / Julien' });
+    expect(result.category).toBe('#cda');
+    expect(result.type).toBe('Entretiens');
   });
 
   it('smart-matches known category when # is present in summary', () => {

@@ -234,69 +234,84 @@ export default function App() {
     subscribeToPush(notifTime);
   }, [notifEnabled, notifTime, subscribeToPush]);
 
-  // Auto-log à l'ouverture : remonte au dernier jour ouvré non logué (max 7 jours)
-  useEffect(() => {
-    const autoLogYesterday = async () => {
-      if (!isAuthenticated || selectedCalendars.length < 2) return;
-      const lastLog = localStorage.getItem('lastLogDate');
-      const toLog = getUnloggedWeekdays(new Date(), lastLog);
-      if (toLog.length === 0) return;
+  // Auto-log : remonte au dernier jour ouvré non logué (max 5 semaines)
+  const autoLogYesterday = useCallback(async () => {
+    if (!isAuthenticated || selectedCalendars.length < 2) return;
+    const lastLog = localStorage.getItem('lastLogDate');
+    const toLog = getUnloggedWeekdays(new Date(), lastLog);
+    if (toLog.length === 0) return;
 
-      setStatus({ type: 'success', message: `Remplissage des jours manquants…` });
+    setStatus({ type: 'success', message: `Remplissage des jours manquants…` });
 
-      const refId = selectedCalendars[1];
-      let logged = 0;
+    const refId = selectedCalendars[1];
+    const targetId = selectedCalendars[0];
+    let logged = 0;
 
-      for (const dateStr of toLog) {
-        let m: Activity = { category: '#divsem', type: 'Rien' };
-        let a: Activity = { category: '#divsem', type: 'Rien' };
-
-        try {
-          const res = await fetch(`/api/check-conflicts?calendarId=${refId}&date=${dateStr}`, {
-            headers: getAuthHeader()
-          });
-          if (res.ok) {
-            const refData = await res.json();
-            const morningEvent = refData.find((e: any) => e.start?.includes('08:30'));
-            const afternoonEvent = refData.find((e: any) => e.start?.includes('13:00'));
-            // All-day event (e.g. #ABS RTT): start is a date string with no time
-            const allDayEvent = refData.find((e: any) => e.start && !e.start.includes('T'));
-            if (morningEvent) m = parseEventToActivity(morningEvent);
-            else if (allDayEvent) m = parseEventToActivity(allDayEvent);
-            if (afternoonEvent) a = parseEventToActivity(afternoonEvent);
-            else if (allDayEvent) a = parseEventToActivity(allDayEvent);
-          }
-        } catch (e) {
-          console.warn(`Auto-log: could not fetch ref calendar for ${dateStr}`, e);
-        }
-
-        try {
-          const logRes = await fetch('/api/log-activity', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-            body: JSON.stringify({ morning: m, afternoon: a, calendars: [selectedCalendars[0]], date: dateStr }),
-          });
-          if (!logRes.ok) {
-            if (logRes.status === 401 || logRes.status === 403) {
-              setStatus({ type: 'error', message: `Auto-remplissage interrompu : session expirée (${dateStr})` });
-              break;
-            }
-            setStatus({ type: 'error', message: `Auto-remplissage : erreur ${logRes.status} pour ${dateStr}` });
+    for (const dateStr of toLog) {
+      // Skip days already filled (08:30 AND 13:00 events exist in target calendar)
+      try {
+        const targetRes = await fetch(`/api/check-conflicts?calendarId=${targetId}&date=${dateStr}`, { headers: getAuthHeader() });
+        if (targetRes.ok) {
+          const targetData = await targetRes.json();
+          const hasMorning = targetData.some((e: any) => e.start?.includes('08:30'));
+          const hasAfternoon = targetData.some((e: any) => e.start?.includes('13:00'));
+          if (hasMorning && hasAfternoon) {
+            localStorage.setItem('lastLogDate', dateStr);
             continue;
           }
-          localStorage.setItem('lastLogDate', dateStr);
-          logged++;
-        } catch (e: any) {
-          setStatus({ type: 'error', message: `Auto-remplissage : erreur réseau pour ${dateStr}` });
-          break;
         }
+      } catch { /* proceed */ }
+
+      let m: Activity = { category: '#divsem', type: 'Rien' };
+      let a: Activity = { category: '#divsem', type: 'Rien' };
+
+      try {
+        const res = await fetch(`/api/check-conflicts?calendarId=${refId}&date=${dateStr}`, {
+          headers: getAuthHeader()
+        });
+        if (res.ok) {
+          const refData = await res.json();
+          const morningEvent = refData.find((e: any) => e.start?.includes('08:30'));
+          const afternoonEvent = refData.find((e: any) => e.start?.includes('13:00'));
+          // All-day event (e.g. #ABS RTT): start is a date string with no time
+          const allDayEvent = refData.find((e: any) => e.start && !e.start.includes('T'));
+          if (morningEvent) m = parseEventToActivity(morningEvent);
+          else if (allDayEvent) m = parseEventToActivity(allDayEvent);
+          if (afternoonEvent) a = parseEventToActivity(afternoonEvent);
+          else if (allDayEvent) a = parseEventToActivity(allDayEvent);
+        }
+      } catch (e) {
+        console.warn(`Auto-log: could not fetch ref calendar for ${dateStr}`, e);
       }
 
-      if (logged > 0) setStatus({ type: 'success', message: `${logged} jour(s) rempli(s) ✓` });
-    };
+      try {
+        const logRes = await fetch('/api/log-activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+          body: JSON.stringify({ morning: m, afternoon: a, calendars: [targetId], date: dateStr }),
+        });
+        if (!logRes.ok) {
+          if (logRes.status === 401 || logRes.status === 403) {
+            setStatus({ type: 'error', message: `Auto-remplissage interrompu : session expirée (${dateStr})` });
+            break;
+          }
+          setStatus({ type: 'error', message: `Auto-remplissage : erreur ${logRes.status} pour ${dateStr}` });
+          continue;
+        }
+        localStorage.setItem('lastLogDate', dateStr);
+        logged++;
+      } catch (e: any) {
+        setStatus({ type: 'error', message: `Auto-remplissage : erreur réseau pour ${dateStr}` });
+        break;
+      }
+    }
 
-    autoLogYesterday();
+    if (logged > 0) setStatus({ type: 'success', message: `${logged} jour(s) rempli(s) ✓` });
   }, [isAuthenticated, selectedCalendars, getAuthHeader]);
+
+  useEffect(() => {
+    autoLogYesterday();
+  }, [autoLogYesterday]);
 
   useEffect(() => {
     localStorage.setItem('notifEnabled', String(notifEnabled));
@@ -1387,7 +1402,7 @@ export default function App() {
                   onClick={() => {
                     localStorage.removeItem('lastLogDate');
                     setShowSettings(false);
-                    window.location.reload();
+                    autoLogYesterday();
                   }}
                   className="w-full py-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline text-xs font-medium"
                 >
