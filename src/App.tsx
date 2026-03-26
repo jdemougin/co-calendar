@@ -244,28 +244,10 @@ export default function App() {
 
       setStatus({ type: 'success', message: `Auto-remplissage de ${toLog.length} jour(s) en cours…` });
 
-      const targetId = selectedCalendars[0];
       const refId = selectedCalendars[1];
       let logged = 0;
 
       for (const dateStr of toLog) {
-        // Skip if target calendar already has events for this day
-        try {
-          const existingRes = await fetch(`/api/check-conflicts?calendarId=${targetId}&date=${dateStr}`, {
-            headers: getAuthHeader()
-          });
-          if (existingRes.ok) {
-            const existing = await existingRes.json();
-            const hasEvents = existing.some((e: any) => e.start?.includes('08:30') || e.start?.includes('13:00'));
-            if (hasEvents) {
-              localStorage.setItem('lastLogDate', dateStr);
-              continue;
-            }
-          }
-        } catch (e) {
-          console.warn(`Auto-log: could not check target calendar for ${dateStr}`, e);
-        }
-
         let m: Activity = { category: '#divsem', type: 'Rien' };
         let a: Activity = { category: '#divsem', type: 'Rien' };
 
