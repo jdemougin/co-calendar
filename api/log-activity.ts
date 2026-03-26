@@ -64,7 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const summary =
           activity.type === 'Rien'
             ? activity.category
-            : `${activity.category} ${activity.type}`;
+            : `${activity.category} - ${activity.type}`;
 
         await calendar.events.insert({
           calendarId,
