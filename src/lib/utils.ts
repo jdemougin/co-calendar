@@ -39,7 +39,7 @@ export function parseEventToActivity(event: any): Activity {
     return { category: foundCategory, type: foundType || remaining || 'Rien' };
   }
 
-  return { category: summary, type: 'Rien' };
+  return { category: '#divsem', type: 'Rien' };
 }
 
 /**
