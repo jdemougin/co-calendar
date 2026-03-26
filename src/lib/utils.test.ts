@@ -34,8 +34,8 @@ describe('parseEventToActivity', () => {
     expect(result.category).toBe('#cda');
   });
 
-  it('falls back to raw summary if no match', () => {
-    expect(parseEventToActivity({ summary: 'Réunion équipe' })).toEqual({ category: 'Réunion équipe', type: 'Rien' });
+  it('falls back to #divsem if no match', () => {
+    expect(parseEventToActivity({ summary: 'Réunion équipe' })).toEqual({ category: '#divsem', type: 'Rien' });
   });
 
   it('lowercases the category', () => {
