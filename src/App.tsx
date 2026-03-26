@@ -242,7 +242,10 @@ export default function App() {
       const toLog = getUnloggedWeekdays(new Date(), lastLog);
       if (toLog.length === 0) return;
 
+      setStatus({ type: 'success', message: `Auto-remplissage de ${toLog.length} jour(s) en cours…` });
+
       const refId = selectedCalendars[1];
+      let logged = 0;
 
       for (const dateStr of toLog) {
         let m: Activity = { category: '#divsem', type: 'Rien' };
@@ -270,16 +273,22 @@ export default function App() {
             body: JSON.stringify({ morning: m, afternoon: a, calendars: [selectedCalendars[0]], date: dateStr }),
           });
           if (!logRes.ok) {
-            if (logRes.status === 401 || logRes.status === 403) break; // token expiré, arrêter
-            console.warn(`Auto-log: server error ${logRes.status} for ${dateStr}`);
+            if (logRes.status === 401 || logRes.status === 403) {
+              setStatus({ type: 'error', message: `Auto-remplissage interrompu : session expirée (${dateStr})` });
+              break;
+            }
+            setStatus({ type: 'error', message: `Auto-remplissage : erreur ${logRes.status} pour ${dateStr}` });
             continue;
           }
           localStorage.setItem('lastLogDate', dateStr);
-        } catch (e) {
-          console.warn(`Auto-log: network error for ${dateStr}`, e);
+          logged++;
+        } catch (e: any) {
+          setStatus({ type: 'error', message: `Auto-remplissage : erreur réseau pour ${dateStr}` });
           break;
         }
       }
+
+      if (logged > 0) setStatus({ type: 'success', message: `${logged} jour(s) rempli(s) automatiquement ✓` });
     };
 
     autoLogYesterday();
