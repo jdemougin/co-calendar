@@ -1370,7 +1370,18 @@ export default function App() {
                   )}
                 </div>
 
-                <button 
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('lastLogDate');
+                    setShowSettings(false);
+                    window.location.reload();
+                  }}
+                  className="w-full py-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline text-xs font-medium"
+                >
+                  Rejouer les jours manquants
+                </button>
+
+                <button
                   onClick={() => {
                     localStorage.removeItem('selectedCalendars');
                     localStorage.removeItem('calendarsLocked');
