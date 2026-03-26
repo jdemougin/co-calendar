@@ -31,10 +31,12 @@ export function parseEventToActivity(event: any): Activity {
   }
 
   const foundCategory = CATEGORIES.find(cat =>
-    summary.toUpperCase().includes(cat.toUpperCase())
+    summary.toUpperCase().includes(cat.toUpperCase()) ||
+    summary.toUpperCase().includes(cat.slice(1).toUpperCase())
   );
   if (foundCategory) {
-    const remaining = summary.toUpperCase().replace(foundCategory.toUpperCase(), '').trim();
+    const slug = foundCategory.slice(1).toUpperCase();
+    const remaining = summary.toUpperCase().replace(foundCategory.toUpperCase(), '').replace(slug, '').trim();
     const foundType = TYPES.find(t => t !== 'Autre...' && remaining.includes(t.toUpperCase()));
     return { category: foundCategory, type: foundType || remaining || 'Rien' };
   }
