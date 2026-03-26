@@ -242,7 +242,7 @@ export default function App() {
       const toLog = getUnloggedWeekdays(new Date(), lastLog);
       if (toLog.length === 0) return;
 
-      setStatus({ type: 'success', message: `Auto-remplissage de ${toLog.length} jour(s) en cours…` });
+      setStatus({ type: 'success', message: `Remplissage des jours manquants…` });
 
       const refId = selectedCalendars[1];
       let logged = 0;
@@ -292,7 +292,7 @@ export default function App() {
         }
       }
 
-      if (logged > 0) setStatus({ type: 'success', message: `${logged} jour(s) rempli(s) automatiquement ✓` });
+      if (logged > 0) setStatus({ type: 'success', message: `${logged} jour(s) rempli(s) ✓` });
     };
 
     autoLogYesterday();
