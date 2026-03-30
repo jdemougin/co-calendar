@@ -34,6 +34,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { time: currentTime, date: today } = getParisParts(new Date());
 
+  // Skip weekends (Saturday=6, Sunday=0) in Paris timezone
+  const parisDay = new Date(today + 'T12:00:00').getDay();
+  if (parisDay === 0 || parisDay === 6) {
+    return res.status(200).json({ skipped: 'weekend' });
+  }
+
   // Fetch users whose notif_time matches now and haven't been sent today
   const { data: users, error } = await supabase
     .from('push_subscriptions')
