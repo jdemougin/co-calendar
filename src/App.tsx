@@ -100,7 +100,7 @@ function CustomSelect({
                             }}
                             className={`w-full px-4 py-3 rounded-2xl text-base font-bold flex items-center justify-between transition-all ${
                               value === item
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'
                                 : 'bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-transparent hover:border-slate-200 dark:hover:border-slate-500'
                             }`}
                           >
@@ -773,7 +773,7 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => handleSubmit(true)}
-                  className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                  className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
                 >
                   Ajouter
                 </button>
@@ -842,7 +842,7 @@ export default function App() {
             <p className="text-slate-500 dark:text-slate-400 mb-6">Connectez votre compte Google pour synchroniser vos activités avec vos agendas.</p>
             <button
               onClick={handleLogin}
-              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
             >
               Commencer avec Google
             </button>
