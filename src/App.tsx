@@ -177,7 +177,7 @@ export default function App() {
     if (tokens) {
       setIsAuthenticated(true);
       fetchCalendars();
-    } else {
+    } else if (!window.location.hash.startsWith('#tokens=')) {
       checkAuth();
     }
     const interval = setInterval(checkTime, 60000);
@@ -374,11 +374,12 @@ export default function App() {
         const refData = await resRef.json();
         const morningEvent = refData.find((e: any) => e.start?.includes('08:30'));
         const afternoonEvent = refData.find((e: any) => e.start?.includes('13:00'));
-        
-        if (morningEvent || afternoonEvent) {
-          const mAct = morningEvent ? parseEventToActivity(morningEvent) : undefined;
-          const aAct = afternoonEvent ? parseEventToActivity(afternoonEvent) : undefined;
-          
+        const allDayEvent = refData.find((e: any) => e.start && !e.start.includes('T'));
+
+        if (morningEvent || afternoonEvent || allDayEvent) {
+          const mAct = morningEvent ? parseEventToActivity(morningEvent) : allDayEvent ? parseEventToActivity(allDayEvent) : undefined;
+          const aAct = afternoonEvent ? parseEventToActivity(afternoonEvent) : allDayEvent ? parseEventToActivity(allDayEvent) : undefined;
+
           if (mAct) {
             setMorning(mAct);
             setIsMorningPreFilled(true);
@@ -387,7 +388,7 @@ export default function App() {
             setAfternoon(aAct);
             setIsAfternoonPreFilled(true);
           }
-          
+
           console.log('Auto-filled form from reference calendar');
         }
       }
