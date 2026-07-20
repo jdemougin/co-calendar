@@ -42,8 +42,21 @@ describe('parseEventToActivity', () => {
     expect(result.category).toBe('#cda');
   });
 
-  it('falls back to #divsem if no match', () => {
-    expect(parseEventToActivity({ summary: 'Réunion équipe' })).toEqual({ category: '#divsem', type: 'Rien' });
+  it('falls back to the raw summary if no match (interactive default)', () => {
+    expect(parseEventToActivity({ summary: 'Réunion équipe' })).toEqual({ category: 'Réunion équipe', type: 'Rien' });
+  });
+
+  it('falls back to #divsem if no match and safeFallback is set (auto-log)', () => {
+    expect(parseEventToActivity({ summary: 'Réunion équipe' }, true)).toEqual({ category: '#divsem', type: 'Rien' });
+  });
+
+  it('safeFallback also rejects unknown categories from the # and "cat - type" branches', () => {
+    expect(parseEventToActivity({ summary: '#note important stuff' }, true)).toEqual({ category: '#divsem', type: 'Rien' });
+    expect(parseEventToActivity({ summary: 'réunion - hebdo' }, true)).toEqual({ category: '#divsem', type: 'Rien' });
+  });
+
+  it('safeFallback still lets recognized categories through unchanged', () => {
+    expect(parseEventToActivity({ summary: 'cda - cours' }, true)).toEqual({ category: '#cda', type: 'Cours' });
   });
 
   it('lowercases the category', () => {

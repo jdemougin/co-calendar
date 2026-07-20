@@ -275,10 +275,10 @@ export default function App() {
           const afternoonEvent = refData.find((e: any) => e.start?.includes('13:00'));
           // All-day event (e.g. #ABS RTT): start is a date string with no time
           const allDayEvent = refData.find((e: any) => e.start && !e.start.includes('T'));
-          if (morningEvent) m = parseEventToActivity(morningEvent);
-          else if (allDayEvent) m = parseEventToActivity(allDayEvent);
-          if (afternoonEvent) a = parseEventToActivity(afternoonEvent);
-          else if (allDayEvent) a = parseEventToActivity(allDayEvent);
+          if (morningEvent) m = parseEventToActivity(morningEvent, true);
+          else if (allDayEvent) m = parseEventToActivity(allDayEvent, true);
+          if (afternoonEvent) a = parseEventToActivity(afternoonEvent, true);
+          else if (allDayEvent) a = parseEventToActivity(allDayEvent, true);
         }
       } catch (e) {
         console.warn(`Auto-log: could not fetch ref calendar for ${dateStr}`, e);

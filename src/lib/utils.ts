@@ -11,10 +11,7 @@ export const CATEGORY_GROUPS = [
 export const CATEGORIES = CATEGORY_GROUPS.flatMap(g => g.items);
 export const TYPES = ['Cours', 'Prépa', 'Rien', 'Autre...'];
 
-export function parseEventToActivity(event: any): Activity {
-  if (!event) return { category: '', type: '' };
-  const summary = (event.summary || '').trim();
-
+function detectActivity(summary: string): Activity {
   // Branch 1: explicit # prefix → "#dwwm - Cours" or "#dwwm Cours"
   if (summary.includes('#')) {
     const parts = summary.split(' ');
@@ -55,7 +52,22 @@ export function parseEventToActivity(event: any): Activity {
     return { category: cat.trim().toLowerCase(), type: type.trim() };
   }
 
-  return { category: '#divsem', type: 'Rien' };
+  // Branch 4: no pattern matched at all — surface the raw title as-is.
+  return { category: summary, type: 'Rien' };
+}
+
+export function parseEventToActivity(event: any, safeFallback = false): Activity {
+  if (!event) return { category: '', type: '' };
+  const summary = (event.summary || '').trim();
+  const result = detectActivity(summary);
+
+  // In supervised contexts (interactive pre-fill), surface whatever was detected so the user
+  // can see and adjust it. In unsupervised contexts (auto-log writing directly to the calendar),
+  // only trust a recognized category — anything else falls back to a safe generic entry.
+  if (safeFallback && !CATEGORIES.includes(result.category)) {
+    return { category: '#divsem', type: 'Rien' };
+  }
+  return result;
 }
 
 /**
