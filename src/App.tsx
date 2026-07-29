@@ -228,11 +228,35 @@ export default function App() {
     }
   }, [getAuthHeader]);
 
+  const unsubscribeFromPush = useCallback(async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (!sub) return;
+      await fetch('/api/push/unsubscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ endpoint: sub.endpoint }),
+      });
+      await sub.unsubscribe();
+    } catch (e) {
+      console.error('Push unsubscribe failed:', e);
+    }
+  }, [getAuthHeader]);
+
   // Abonnement push serveur — l'unique source de vérité pour les notifications
   useEffect(() => {
     if (!notifEnabled) return;
     subscribeToPush(notifTime);
   }, [notifEnabled, notifTime, subscribeToPush]);
+
+  // One-time cleanup on mount: purge any subscription left over from before unsubscribe
+  // was wired up, for users who already had notifications toggled off.
+  useEffect(() => {
+    if (!notifEnabled) unsubscribeFromPush();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Auto-log : remonte au dernier jour ouvré non logué (max 5 semaines)
   const autoLogYesterday = useCallback(async () => {
@@ -1291,14 +1315,16 @@ export default function App() {
                   </div>
                   <button
                     onClick={async () => {
-                      if (!notifEnabled && Notification.permission !== 'granted') {
-                        const perm = await Notification.requestPermission();
-                        if (perm === 'granted') {
-                          setNotifEnabled(true);
-                          subscribeToPush(notifTime);
+                      if (!notifEnabled) {
+                        if (Notification.permission !== 'granted') {
+                          const perm = await Notification.requestPermission();
+                          if (perm !== 'granted') return;
                         }
+                        setNotifEnabled(true);
+                        subscribeToPush(notifTime);
                       } else {
-                        setNotifEnabled(!notifEnabled);
+                        setNotifEnabled(false);
+                        unsubscribeFromPush();
                       }
                     }}
                     className={`w-12 h-6 rounded-full transition-all relative ${notifEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}
